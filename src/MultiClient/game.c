@@ -169,6 +169,8 @@ static void gameApiItemOut(Game* game)
     uint16_t gi;
     uint16_t flags;
     uint8_t buffer[16];
+    uint64_t checkKey;
+    int alreadySent;
 
     itemBase = game->apiNetAddr + 0x0c;
     protocolReadBuffer(game, itemBase, 16, buffer);
@@ -182,7 +184,26 @@ static void gameApiItemOut(Game* game)
     if (game->apiError)
         return;
 
-    printf("ITEM OUT - FROM: %d, TO: %d, GAME: %d, KEY: %04X, GI: %04X, FLAGS: %04X\n", playerFrom, playerTo, gameId, key, gi, flags);
+    /* Check if this item was already sent */
+    checkKey = itemKey(key, gameId, playerFrom, (flags & (1 << 2)) ? game->entriesCount : 0xffffffff);
+    alreadySent = 0;
+    for (uint32_t i = 0; i < game->entriesCount; i++)
+    {
+        if (game->entries[i].key == checkKey)
+        {
+            alreadySent = 1;
+            break;
+        }
+    }
+
+    if (alreadySent)
+    {
+        printf("ITEM OUT - FROM: %d, TO: %d, GAME: %d, KEY: %04X, GI: %04X, FLAGS: %04X [ALREADY SENT]\n", playerFrom, playerTo, gameId, key, gi, flags);
+    }
+    else
+    {
+        printf("ITEM OUT - FROM: %d, TO: %d, GAME: %d, KEY: %04X, GI: %04X, FLAGS: %04X\n", playerFrom, playerTo, gameId, key, gi, flags);
+    }
 
     /* Write and flag as sent */
     if (writeItemLedger(game, playerFrom, playerTo, gameId, key, gi, flags))
@@ -197,6 +218,8 @@ static void gameApiApplyLedger(Game* game)
     uint32_t cmdBase;
     uint8_t tmp[8];
     LedgerFullEntry* fe;
+    uint8_t playerFrom;
+    uint8_t playerTo;
 
     entryId = protocolRead32(game, game->apiNetAddr + 0x04);
     if (entryId == 0xffffffff)
@@ -207,8 +230,11 @@ static void gameApiApplyLedger(Game* game)
         return;
 
     /* Apply the ledger entry */
-    printf("LEDGER APPLY #%d\n", entryId);
     fe = game->entries + entryId;
+    playerFrom = fe->data[0];
+    playerTo = fe->data[1];
+    printf("LEDGER APPLY #%d - from: Player %d, to: Player %d\n", entryId, playerFrom, playerTo);
+
     protocolWrite8(game, game->apiNetAddr + 0x18, 0x01);
     cmdBase = game->apiNetAddr + 0x1c;
 
