@@ -232,6 +232,7 @@ void        apiContextUnlock(Game* game);
 void        sendqInit(SendQueue* q);
 int         sendqOpen(SendQueue* q, const uint8_t* uuid);
 void        sendqClose(SendQueue* q);
+int         sendqLocate(const SendQueue* sq, uint64_t key);
 int         sendqAppend(SendQueue* sq, const LedgerFullEntry* entry);
 void        sendqTick(SendQueue* q, NetBuffer* nb);
 void        sendqAck(SendQueue* q, uint64_t key);

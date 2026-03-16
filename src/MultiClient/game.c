@@ -184,7 +184,7 @@ static void gameApiItemOut(Game* game)
     if (game->apiError)
         return;
 
-    /* Check if this item was already sent */
+    /* Check if this item was already sent (exists in the ledger) */
     checkKey = itemKey(key, gameId, playerFrom, (flags & (1 << 2)) ? game->entriesCount : 0xffffffff);
     alreadySent = 0;
     for (uint32_t i = 0; i < game->entriesCount; i++)

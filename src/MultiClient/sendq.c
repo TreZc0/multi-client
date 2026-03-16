@@ -70,7 +70,7 @@ void sendqClose(SendQueue* q)
     free(q->data);
 }
 
-static int sendqLocate(const SendQueue* sq, uint64_t key)
+int sendqLocate(const SendQueue* sq, uint64_t key)
 {
     for (uint32_t i = 0; i < sq->size; ++i)
     {
